@@ -14,9 +14,8 @@ services:
     environment:
       # Variables de entorno (se pueden sobreescribir con .env)
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_ANON_KEY}
     env_file:
       - .env
     restart: unless-stopped

@@ -78,9 +78,10 @@ cp .env.example .env
 
 Edita el archivo `.env` con tus credenciales:
 - `OPENROUTER_API_KEY`: Tu API key de [OpenRouter](https://openrouter.ai/keys)
-- `OPENAI_API_KEY`: Tu API key de [OpenAI](https://platform.openai.com/api-keys) (para embeddings)
 - `SUPABASE_URL`: URL de tu proyecto Supabase
-- `SUPABASE_SERVICE_KEY`: Service key de Supabase
+- `SUPABASE_ANON_KEY`: Anon/public key de Supabase (Settings → API)
+
+> 🔒 **Seguridad:** Usamos `ANON_KEY` con Row Level Security (RLS) en lugar de `SERVICE_KEY`. Ver [SEGURIDAD_RLS.md](SEGURIDAD_RLS.md)
 
 3. **Levantar con Docker**
 ```bash
@@ -130,11 +131,11 @@ streamlit run app.py
 
 El proyecto utiliza tres tablas en Supabase, cada una con su función RPC correspondiente:
 
-| Agente   | Tabla      | Query RPC       | Modelo Embedding | Dimensiones |
-|----------|------------|-----------------|------------------|-------------|
-| Wollok   | `wollok`   | `wollok_search` | text-embedding-3-small | 1536 |
-| Haskell  | `haskell`  | `haskell_search`| text-embedding-3-small | 1536 |
-| Prolog   | `prolog`   | `prolog_search` | text-embedding-3-small | 1536 |
+| Agente   | Tabla      | Query RPC       | Modelo Embedding | Costo | Dimensiones |
+|----------|------------|-----------------|------------------|-------|-------------|
+| Wollok   | `wollok`   | `wollok_search` | openai/text-embedding-3-small (via OpenRouter) | $0.02/M tokens | 1536 |
+| Haskell  | `haskell`  | `haskell_search`| openai/text-embedding-3-small (via OpenRouter) | $0.02/M tokens | 1536 |
+| Prolog   | `prolog`   | `prolog_search` | openai/text-embedding-3-small (via OpenRouter) | $0.02/M tokens | 1536 |
 
 ### Configuración de las Funciones RPC
 
@@ -227,6 +228,39 @@ Las contribuciones son bienvenidas. Por favor:
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
+
+## 🧪 Testing
+
+ChatPdeP incluye una suite completa de tests con **LLM-as-a-Judge** para garantizar calidad.
+
+### Ejecutar Tests
+
+```bash
+# Todos los tests
+./run_tests.sh        # Linux/Mac
+run_tests.bat         # Windows
+
+# Tests específicos
+./run_tests.sh unit           # Tests unitarios
+./run_tests.sh integration    # Tests de integración
+./run_tests.sh judge          # Tests con LLM-as-a-Judge
+./run_tests.sh coverage       # Tests con cobertura
+```
+
+### LLM-as-a-Judge
+
+Los tests usan GPT-4o-mini como juez para evaluar:
+- ✅ Relevancia al paradigma correcto
+- ✅ Corrección técnica
+- ✅ Claridad pedagógica
+- ✅ Completitud de respuestas
+- ✅ Uso apropiado del contexto RAG
+
+**Score mínimo requerido:** 7.0/10
+
+Ver [TESTING.md](TESTING.md) para documentación completa.
+
+---
 
 ## 📝 Licencia
 

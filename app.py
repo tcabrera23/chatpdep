@@ -26,6 +26,71 @@ from langchain_core.tools import tool
 load_dotenv()
 
 # =============================================================================
+# FUNCIONES AUXILIARES
+# =============================================================================
+
+def count_tokens_approximate(messages: list) -> int:
+    """
+    Estima el número de tokens en una lista de mensajes.
+    Aproximación: 1 token ≈ 4 caracteres en español.
+    """
+    total_chars = sum(len(msg.content) if hasattr(msg, 'content') else len(str(msg)) for msg in messages)
+    return total_chars // 4
+
+
+def summarize_conversation(llm: ChatOpenAI, messages: list, keep_last: int = 4) -> list:
+    """
+    Resume conversaciones largas manteniendo los mensajes más recientes.
+    
+    Args:
+        llm: Modelo de lenguaje para generar el resumen
+        messages: Lista de mensajes a resumir
+        keep_last: Número de mensajes recientes a mantener sin resumir
+    
+    Returns:
+        Lista de mensajes con historial resumido
+    """
+    if len(messages) <= keep_last + 2:  # Si hay pocos mensajes, no resumir
+        return messages
+    
+    # Separar mensajes a resumir y mensajes recientes
+    messages_to_summarize = messages[1:-keep_last]  # Excluir system prompt y últimos mensajes
+    recent_messages = messages[-keep_last:]
+    system_prompt = messages[0] if isinstance(messages[0], SystemMessage) else None
+    
+    if not messages_to_summarize:
+        return messages
+    
+    # Crear prompt de resumen
+    conversation_text = "\n".join([
+        f"{msg.__class__.__name__}: {msg.content}" 
+        for msg in messages_to_summarize
+    ])
+    
+    summary_prompt = f"""Resume la siguiente conversación de manera concisa, preservando:
+- Conceptos clave discutidos
+- Código o ejemplos importantes mencionados
+- Conclusiones o decisiones tomadas
+
+Conversación:
+{conversation_text}
+
+Resumen:"""
+    
+    # Generar resumen
+    summary_response = llm.invoke([HumanMessage(content=summary_prompt)])
+    summary_message = SystemMessage(content=f"Resumen de conversación previa: {summary_response.content}")
+    
+    # Construir nueva lista de mensajes
+    result = []
+    if system_prompt:
+        result.append(system_prompt)
+    result.append(summary_message)
+    result.extend(recent_messages)
+    
+    return result
+
+# =============================================================================
 # CONFIGURACIÓN DE LA PÁGINA
 # =============================================================================
 
@@ -380,6 +445,26 @@ if prompt := st.chat_input("Escribe tu pregunta sobre " + selected_agent + "..."
 Usa la información anterior para responder de manera precisa y fundamentada."""
                 
                 messages.append(HumanMessage(content=enriched_message))
+                
+                # ✅ MIDDLEWARE DE SUMMARIZATION
+                # Verificar si necesitamos resumir la conversación
+                estimated_tokens = count_tokens_approximate(messages)
+                
+                # Límites por modelo (contexto seguro: 80% del máximo)
+                model_limits = {
+                    "google/gemini-2.5-flash-lite": 800_000,  # 1M tokens, usar 80%
+                    "openai/gpt-4.1-nano": 100_000,           # 128K tokens, usar ~80K
+                    "x-ai/grok-4.1-fast": 100_000,            # 128K tokens, usar ~80K
+                    "qwen/qwen3-coder": 25_000                # 32K tokens, usar ~25K
+                }
+                
+                safe_limit = model_limits.get(selected_model, 25_000)
+                
+                # Si excedemos el límite, resumir conversación
+                if estimated_tokens > safe_limit:
+                    with st.spinner("📝 Resumiendo conversación anterior..."):
+                        messages = summarize_conversation(llm, messages, keep_last=4)
+                        st.info(f"💡 Conversación resumida ({estimated_tokens} → {count_tokens_approximate(messages)} tokens aprox.)")
                 
                 # Invocar LLM con contexto
                 response = llm.invoke(messages)

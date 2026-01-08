@@ -18,21 +18,28 @@ class SupabaseRAG:
     def __init__(self):
         """Inicializa el cliente de Supabase y embeddings."""
         self.supabase_url = os.environ.get("SUPABASE_URL")
-        self.supabase_key = os.environ.get("SUPABASE_SERVICE_KEY")
+        # Usar ANON_KEY para operaciones de lectura RAG (más seguro que SERVICE_KEY)
+        # Las políticas RLS permiten lectura pública en las tablas de teoría
+        self.supabase_key = os.environ.get("SUPABASE_ANON_KEY") or os.environ.get("SUPABASE_SERVICE_KEY")
         
         if not self.supabase_url or not self.supabase_key:
-            raise ValueError("SUPABASE_URL y SUPABASE_SERVICE_KEY deben estar configurados en las variables de entorno")
+            raise ValueError(
+                "SUPABASE_URL y SUPABASE_ANON_KEY (o SUPABASE_SERVICE_KEY para retrocompatibilidad) "
+                "deben estar configurados en las variables de entorno"
+            )
         
         self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
         
-        # Embeddings de OpenAI (1536 dimensiones como especificado en README)
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY debe estar configurado en las variables de entorno")
+        # Embeddings usando OpenRouter (mismo modelo de OpenAI pero vía OpenRouter)
+        # Model: openai/text-embedding-3-small (1536 dimensiones, $0.02/M tokens)
+        openrouter_api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not openrouter_api_key:
+            raise ValueError("OPENROUTER_API_KEY debe estar configurado en las variables de entorno")
         
         self.embeddings = OpenAIEmbeddings(
-            openai_api_key=openai_api_key,
-            model="text-embedding-3-small"
+            openai_api_key=openrouter_api_key,  # OpenRouter usa el mismo formato
+            model="openai/text-embedding-3-small",
+            base_url="https://openrouter.ai/api/v1"
         )
     
     def search_theory(
