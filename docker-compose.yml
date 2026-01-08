@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  chatpdep:
+    build: .
+    container_name: chatpdep_app
+    ports:
+      - "8501:8501"
+    volumes:
+      # Montar volumen para persistir base de datos SQLite
+      - ./data:/app/data
+      # Montar código para desarrollo (opcional, comentar en producción)
+      - .:/app
+    environment:
+      # Variables de entorno (se pueden sobreescribir con .env)
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - chatpdep_network
+
+networks:
+  chatpdep_network:
+    driver: bridge
+
+volumes:
+  chatpdep_data:
+    driver: local
+
