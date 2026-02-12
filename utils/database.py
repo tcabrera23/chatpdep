@@ -1,6 +1,6 @@
 """
-Manejo de base de datos SQLite para historial de conversaciones.
-Implementa el almacenamiento local de conversaciones del usuario.
+Manejo de base de datos para historial de conversaciones.
+Soporta SQLite (local) y Session State (Streamlit Cloud).
 """
 
 import sqlite3
@@ -8,11 +8,130 @@ import json
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 import os
+import streamlit as st
 
 
-class ConversationDatabase:
+def is_streamlit_cloud() -> bool:
     """
-    Clase para manejar el historial de conversaciones en SQLite.
+    Detecta si estamos en Streamlit Cloud.
+    En Streamlit Cloud no podemos escribir archivos persistentes.
+    """
+    # Streamlit Cloud tiene esta variable de entorno
+    if os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_CLOUD"):
+        return True
+    
+    # Intentar escribir en data/ como test
+    try:
+        test_file = "data/.write_test"
+        os.makedirs("data", exist_ok=True)
+        with open(test_file, "w") as f:
+            f.write("test")
+        os.remove(test_file)
+        return False
+    except (OSError, IOError, PermissionError):
+        return True
+
+
+class SessionStateDatabase:
+    """
+    Implementación de base de datos usando solo st.session_state.
+    Para uso en Streamlit Cloud donde no hay persistencia entre sesiones.
+    """
+    
+    def __init__(self):
+        """Inicializa la base de datos en session_state."""
+        if "conversations_data" not in st.session_state:
+            st.session_state.conversations_data = {}
+        if "messages_data" not in st.session_state:
+            st.session_state.messages_data = {}
+    
+    def create_conversation(
+        self,
+        conversation_id: str,
+        title: str,
+        agent_name: str,
+        model_name: str
+    ) -> bool:
+        """Crea una nueva conversación en session_state."""
+        if conversation_id in st.session_state.conversations_data:
+            return False
+        
+        st.session_state.conversations_data[conversation_id] = {
+            "conversation_id": conversation_id,
+            "title": title,
+            "agent_name": agent_name,
+            "model_name": model_name,
+            "created_at": datetime.now().isoformat(),
+            "updated_at": datetime.now().isoformat()
+        }
+        st.session_state.messages_data[conversation_id] = []
+        return True
+    
+    def add_message(
+        self,
+        conversation_id: str,
+        role: str,
+        content: str,
+        has_attachment: bool = False,
+        attachment_type: Optional[str] = None
+    ) -> bool:
+        """Añade un mensaje a una conversación en session_state."""
+        if conversation_id not in st.session_state.messages_data:
+            st.session_state.messages_data[conversation_id] = []
+        
+        message = {
+            "role": role,
+            "content": content,
+            "created_at": datetime.now().isoformat()
+        }
+        if has_attachment:
+            message["attachment_type"] = attachment_type
+        
+        st.session_state.messages_data[conversation_id].append(message)
+        
+        # Actualizar timestamp de conversación
+        if conversation_id in st.session_state.conversations_data:
+            st.session_state.conversations_data[conversation_id]["updated_at"] = datetime.now().isoformat()
+        
+        return True
+    
+    def get_conversation_messages(self, conversation_id: str) -> List[Dict[str, str]]:
+        """Obtiene todos los mensajes de una conversación."""
+        if conversation_id not in st.session_state.messages_data:
+            return []
+        return st.session_state.messages_data[conversation_id]
+    
+    def get_all_conversations(self) -> List[Dict[str, any]]:
+        """Obtiene todas las conversaciones ordenadas por fecha."""
+        conversations = list(st.session_state.conversations_data.values())
+        conversations.sort(key=lambda x: x["updated_at"], reverse=True)
+        return conversations
+    
+    def update_conversation_title(self, conversation_id: str, new_title: str) -> bool:
+        """Actualiza el título de una conversación."""
+        if conversation_id in st.session_state.conversations_data:
+            st.session_state.conversations_data[conversation_id]["title"] = new_title
+            st.session_state.conversations_data[conversation_id]["updated_at"] = datetime.now().isoformat()
+            return True
+        return False
+    
+    def delete_conversation(self, conversation_id: str) -> bool:
+        """Elimina una conversación y todos sus mensajes."""
+        if conversation_id in st.session_state.conversations_data:
+            del st.session_state.conversations_data[conversation_id]
+        if conversation_id in st.session_state.messages_data:
+            del st.session_state.messages_data[conversation_id]
+        return True
+    
+    def get_conversation_info(self, conversation_id: str) -> Optional[Dict[str, any]]:
+        """Obtiene información de una conversación específica."""
+        return st.session_state.conversations_data.get(conversation_id)
+
+
+class SQLiteDatabase:
+    """
+    Implementación de base de datos usando SQLite.
+    Para uso local con persistencia entre sesiones.
     """
     
     def __init__(self, db_path: str = "data/conversations.db"):
@@ -331,4 +450,18 @@ class ConversationDatabase:
         except Exception as e:
             print(f"Error al obtener info de conversación: {e}")
             return None
+
+
+# Alias para compatibilidad
+class ConversationDatabase:
+    """
+    Clase adaptadora que elige automáticamente entre SQLite y SessionState.
+    """
+    
+    def __new__(cls, *args, **kwargs):
+        """Crea instancia según el entorno (local o cloud)."""
+        if is_streamlit_cloud():
+            return SessionStateDatabase()
+        else:
+            return SQLiteDatabase(*args, **kwargs)
 

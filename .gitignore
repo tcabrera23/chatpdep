@@ -20,21 +20,11 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
+# Virtual Environment
 venv/
 ENV/
 env/
 .venv
-
-# Environment variables
-.env
-.env.local
-
-# Database
-data/
-*.db
-*.sqlite
-*.sqlite3
 
 # IDE
 .vscode/
@@ -43,25 +33,40 @@ data/
 *.swo
 *~
 
-# Streamlit
-.streamlit/
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Streamlit secrets (NEVER commit)
 .streamlit/secrets.toml
+
+# Database
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Docker
+docker-compose.override.yml
 
 # Temporary files
 tmp/
 temp/
 *.tmp
-
-# Docker
-docker-compose.override.yml
-
-# Docs
-docs/

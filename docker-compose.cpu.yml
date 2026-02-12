@@ -1,5 +1,16 @@
 version: '3.8'
 
+# =============================================================================
+# Docker Compose para CPU (sin GPU)
+# =============================================================================
+# Este archivo es para usuarios que NO tienen GPU NVIDIA
+# Uso: docker-compose -f docker-compose.cpu.yml up --build
+#
+# Diferencias con docker-compose.yml:
+# - No requiere configuración de GPU
+# - Funciona en cualquier sistema (Windows, Mac, Linux)
+# - Ollama usa solo CPU (más lento pero funcional)
+
 services:
   # Servicio principal de la aplicación
   chatpdep:
@@ -26,7 +37,7 @@ services:
     networks:
       - chatpdep_network
 
-  # Servicio de Ollama para LLMs locales
+  # Servicio de Ollama para LLMs locales (CPU only)
   ollama:
     image: ollama/ollama:latest
     container_name: chatpdep_ollama
@@ -37,17 +48,12 @@ services:
       - ollama_models:/root/.ollama
     environment:
       - OLLAMA_HOST=0.0.0.0
+      # Variables para optimizar CPU
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_MAX_LOADED_MODELS=1
     restart: unless-stopped
     networks:
       - chatpdep_network
-    # Configuración de recursos (ajustar según hardware)
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     # Instalar phi4-mini (economy) y qwen3 4b (código) por defecto
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -74,4 +80,3 @@ volumes:
     driver: local
   ollama_models:
     driver: local
-

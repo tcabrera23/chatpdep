@@ -15,6 +15,8 @@ from config.agents import AGENTS, get_agent_config
 from tools.rag_tool import get_rag_instance, recuperar_teoria
 from tools.file_extraction import get_file_extractor
 from utils.database import ConversationDatabase
+from utils.query_classifier import get_classifier
+from utils.model_manager import get_model_manager
 
 # LangChain imports
 from langchain_openai import ChatOpenAI
@@ -143,6 +145,14 @@ if "db" not in st.session_state:
 if "file_extractor" not in st.session_state:
     st.session_state.file_extractor = get_file_extractor()
 
+# Inicializar gestor de modelos
+if "model_manager" not in st.session_state:
+    st.session_state.model_manager = get_model_manager()
+
+# Inicializar clasificador de queries
+if "query_classifier" not in st.session_state:
+    st.session_state.query_classifier = get_classifier()
+
 # Conversación actual
 if "conversation_id" not in st.session_state:
     st.session_state.conversation_id = f"conv_{uuid.uuid4().hex[:8]}_{int(time.time())}"
@@ -156,7 +166,19 @@ if "current_agent" not in st.session_state:
     st.session_state.current_agent = "Wollok"
 
 if "current_model" not in st.session_state:
-    st.session_state.current_model = "google/gemini-2.5-flash-lite"
+    st.session_state.current_model = "groq/compound"
+
+# Proveedor de modelo (groq/openrouter/ollama)
+if "model_provider" not in st.session_state:
+    st.session_state.model_provider = "groq"  # Groq por defecto (gratis)
+
+# Auto-clasificación habilitada
+if "auto_classify" not in st.session_state:
+    st.session_state.auto_classify = True
+
+# Modelos personalizados
+if "custom_models" not in st.session_state:
+    st.session_state.custom_models = {}
 
 # Flag para saber si es una conversación nueva
 if "is_new_conversation" not in st.session_state:
@@ -169,16 +191,83 @@ if "is_new_conversation" not in st.session_state:
 with st.sidebar:
     st.markdown("## ⚙️ Configuración")
     
-    # API Key de OpenRouter
-    openrouter_key = st.text_input(
-        "OpenRouter API Key",
-        value=os.getenv("OPENROUTER_API_KEY", ""),
-        type="password",
-        help="Tu API key de OpenRouter para usar los modelos"
-    )
+    # Selector de proveedor
+    st.markdown("### 🌐 Proveedor de Modelo")
     
-    if openrouter_key:
-        os.environ["OPENROUTER_API_KEY"] = openrouter_key
+    provider_options = ["groq", "openrouter", "ollama"]
+    provider_labels = {
+        "groq": "⚡ Groq (Gratis)",
+        "openrouter": "☁️ OpenRouter (Pago)",
+        "ollama": "💻 Local (Ollama)"
+    }
+    
+    # Determinar índice actual
+    current_index = 0
+    if st.session_state.model_provider in provider_options:
+        current_index = provider_options.index(st.session_state.model_provider)
+    
+    provider = st.radio(
+        "Selecciona el proveedor",
+        options=provider_options,
+        format_func=lambda x: provider_labels[x],
+        index=current_index,
+        help="Groq: API gratuita ideal para empezar | OpenRouter: Acceso a todos los modelos | Ollama: Modelos locales sin costo"
+    )
+    st.session_state.model_provider = provider
+    
+    # Configuración según proveedor
+    if provider == "groq":
+        # API Key de Groq (gratis)
+        groq_key = st.text_input(
+            "Groq API Key (Gratis)",
+            value=os.getenv("GROQ_API_KEY", ""),
+            type="password",
+            help="Obtén tu API key gratis en https://console.groq.com/keys"
+        )
+        
+        if groq_key:
+            os.environ["GROQ_API_KEY"] = groq_key
+        
+        st.info("💡 **¡Groq es gratis!** Obtén tu API key en [console.groq.com](https://console.groq.com)")
+    
+    elif provider == "openrouter":
+        # API Key de OpenRouter (pago)
+        openrouter_key = st.text_input(
+            "OpenRouter API Key",
+            value=os.getenv("OPENROUTER_API_KEY", ""),
+            type="password",
+            help="Tu API key de OpenRouter para usar los modelos"
+        )
+        
+        if openrouter_key:
+            os.environ["OPENROUTER_API_KEY"] = openrouter_key
+    
+    else:  # ollama
+        # URL de Ollama (local)
+        ollama_url = st.text_input(
+            "Ollama Base URL",
+            value=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
+            help="URL del servidor Ollama (ej: http://localhost:11434)"
+        )
+        os.environ["OLLAMA_BASE_URL"] = ollama_url
+        
+        # Sugerencias de modelos para instalar
+        with st.expander("📦 Modelos sugeridos para Ollama"):
+            st.markdown("""
+            Instala estos modelos con Docker o manualmente:
+            
+            **Por defecto en Docker:**
+            ```bash
+            phi4-mini (3.8B) - Rápido y ligero
+            ```
+            
+            **Recomendados (vía comando):**
+            ```bash
+            ollama pull qwen3-4b
+            ollama pull deepseek-coder-6.7b
+            ollama pull qwen2.5-coder-7b
+            ```
+            """)
     
     st.markdown("---")
     
@@ -194,48 +283,95 @@ with st.sidebar:
     # Selección de Modelo
     st.markdown("### 🤖 Modelo LLM")
     
-    # Información de modelos con costos (por 1M tokens)
-    models_info = {
-        "google/gemini-2.5-flash-lite": {
-            "name": "Gemini 2.5 Flash Lite",
-            "input": "$0.10",
-            "output": "$0.40",
-            "description": "Rápido y económico"
-        },
-        "openai/gpt-4.1-nano": {
-            "name": "GPT-4.1 Nano",
-            "input": "$0.15",
-            "output": "$0.40",
-            "description": "Equilibrado"
-        },
-        "x-ai/grok-4.1-fast": {
-            "name": "Grok 4.1 Fast",
-            "input": "$0.2",
-            "output": "$0.5",
-            "description": "Potente y rápido"
-        },
-        "qwen/qwen3-coder": {
-            "name": "Qwen 3 Coder",
-            "input": "$0.22",
-            "output": "$0.95",
-            "description": "Especializado en código"
-        }
-    }
+    # Auto-clasificación
+    auto_classify = st.checkbox(
+        "🎯 Auto-clasificar (optimizar costos)",
+        value=st.session_state.auto_classify,
+        help="Clasifica automáticamente la consulta y selecciona el modelo más apropiado según dificultad"
+    )
+    st.session_state.auto_classify = auto_classify
     
-    available_models = list(models_info.keys())
+    # Obtener modelos según proveedor
+    model_manager = st.session_state.model_manager
+    available_models = model_manager.get_models_by_provider(provider)
     
-    selected_model = st.selectbox(
-        "Selecciona el modelo",
-        options=available_models,
-        index=available_models.index(st.session_state.current_model) if st.session_state.current_model in available_models else 0,
+    # Crear opciones para el selector
+    model_options = {model.id: model for model in available_models}
+    
+    # Si no hay modelos disponibles
+    if not model_options:
+        st.warning(f"⚠️ No hay modelos disponibles para {provider}")
+        st.stop()
+    
+    # Selector de modelo
+    selected_model_id = st.selectbox(
+        "Modelo manual (si auto-clasificar desactivado)",
+        options=list(model_options.keys()),
+        index=list(model_options.keys()).index(st.session_state.current_model) if st.session_state.current_model in model_options else 0,
         help="Modelo de lenguaje a utilizar",
-        format_func=lambda x: models_info[x]["name"]
+        format_func=lambda x: model_options[x].name,
+        disabled=auto_classify
     )
     
-    # Mostrar costos del modelo seleccionado
-    model_info = models_info[selected_model]
-    st.caption(f"**💰 Costo por 1M tokens:** Input: {model_info['input']} | Output: {model_info['output']}")
-    st.caption(f"_{model_info['description']}_")
+    # Mostrar info del modelo seleccionado
+    selected_model_config = model_options[selected_model_id]
+    st.caption(f"**💰 Costo:** Input: {selected_model_config.input_cost} | Output: {selected_model_config.output_cost}")
+    st.caption(f"_{selected_model_config.description}_")
+    st.caption(f"**🔧 Tier:** {selected_model_config.tier.upper()}")
+    
+    # Sección para agregar modelos personalizados
+    with st.expander("➕ Agregar modelo personalizado"):
+        st.markdown("Agrega un modelo desde OpenRouter o Ollama:")
+        
+        custom_provider = st.radio(
+            "Proveedor del modelo personalizado",
+            options=["groq", "openrouter", "ollama"],
+            format_func=lambda x: "Groq" if x == "groq" else ("OpenRouter" if x == "openrouter" else "Ollama"),
+            key="custom_provider"
+        )
+        
+        # Placeholder según proveedor
+        placeholder_map = {
+            "groq": "llama-3.3-70b-versatile",
+            "openrouter": "openai/gpt-4o",
+            "ollama": "llama3"
+        }
+        
+        custom_model_id = st.text_input(
+            "ID del modelo",
+            placeholder=placeholder_map.get(custom_provider, "model-id"),
+            help="Copia el ID desde la documentación del proveedor",
+            key="custom_model_id"
+        )
+        
+        custom_model_name = st.text_input(
+            "Nombre descriptivo (opcional)",
+            placeholder="GPT-4o",
+            key="custom_model_name"
+        )
+        
+        custom_tier = st.selectbox(
+            "Tier",
+            options=["economy", "balanced", "premium"],
+            index=1,
+            key="custom_tier"
+        )
+        
+        if st.button("➕ Agregar Modelo", key="add_custom_model"):
+            if custom_model_id:
+                try:
+                    model_manager.add_custom_model(
+                        model_id=custom_model_id,
+                        provider=custom_provider,
+                        name=custom_model_name if custom_model_name else None,
+                        tier=custom_tier
+                    )
+                    st.success(f"✅ Modelo {custom_model_id} agregado exitosamente!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"❌ Error al agregar modelo: {str(e)}")
+            else:
+                st.warning("⚠️ Por favor ingresa el ID del modelo")
     
     # Ventana de contexto
     context_window = st.slider(
@@ -313,14 +449,17 @@ col1, col2, col3 = st.columns(3)
 with col1:
     st.info(f"**Tutor:** {selected_agent}")
 with col2:
-    st.info(f"**Modelo:** {selected_model.split('/')[-1]}")
+    if st.session_state.auto_classify:
+        st.info(f"**Modelo:** 🎯 Auto (optimizando)")
+    else:
+        st.info(f"**Modelo:** {selected_model_id.split('/')[-1]}")
 with col3:
     st.info(f"**Contexto:** {context_window} msgs")
 
 # Actualizar configuración si cambió
-if selected_agent != st.session_state.current_agent or selected_model != st.session_state.current_model:
+if selected_agent != st.session_state.current_agent or selected_model_id != st.session_state.current_model:
     st.session_state.current_agent = selected_agent
-    st.session_state.current_model = selected_model
+    st.session_state.current_model = selected_model_id
     # Si hay mensajes, crear nueva conversación
     if st.session_state.messages:
         st.session_state.conversation_id = f"conv_{uuid.uuid4().hex[:8]}_{int(time.time())}"
@@ -396,6 +535,31 @@ if prompt := st.chat_input("Escribe tu pregunta sobre " + selected_agent + "..."
                 # Obtener configuración del agente
                 agent_config = get_agent_config(selected_agent)
                 
+                # Clasificar consulta si auto-clasificación está habilitada
+                final_model_id = selected_model_id
+                classification_info = None
+                
+                if st.session_state.auto_classify:
+                    with st.spinner("🎯 Clasificando consulta..."):
+                        classifier = st.session_state.query_classifier
+                        classification = classifier.classify(
+                            prompt,
+                            context={"has_attachment": attachment_type is not None}
+                        )
+                        classification_info = classification
+                        
+                        # Sugerir modelo según tier
+                        suggested_model = model_manager.suggest_model_by_tier(
+                            tier=classification.suggested_model_tier,
+                            provider=provider
+                        )
+                        
+                        final_model_id = suggested_model.id
+                        
+                        # Mostrar clasificación
+                        st.info(f"🎯 **Clasificación:** {classification.reasoning}")
+                        st.info(f"🤖 **Modelo seleccionado:** {suggested_model.name}")
+                
                 # Crear herramienta personalizada para este agente
                 @tool
                 def recuperar_teoria_agent(query: str) -> str:
@@ -412,13 +576,23 @@ if prompt := st.chat_input("Escribe tu pregunta sobre " + selected_agent + "..."
                     )
                     return rag.format_results(results)
                 
-                # Crear LLM
-                llm = ChatOpenAI(
-                    model=selected_model,
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=os.getenv("OPENROUTER_API_KEY"),
+                # Crear LLM con fallback
+                llm, is_fallback, fallback_reason = model_manager.create_llm_with_fallback(
+                    model_id=final_model_id,
                     temperature=0.5
                 )
+                
+                # Notificar si se usó fallback
+                if is_fallback:
+                    fallback_config = model_manager.get_fallback_model()
+                    
+                    if provider == "ollama":
+                        st.error(f"⚠️ **Error en modelo local:** {fallback_reason}")
+                        st.warning(f"🔄 Por favor selecciona un modelo cloud desde el sidebar o verifica que Ollama esté corriendo.")
+                        st.info(f"💡 Usando fallback: {fallback_config.name}")
+                    else:
+                        st.warning(f"⚠️ Modelo seleccionado falló. Usando fallback: {fallback_config.name}")
+                        st.caption(f"Razón: {fallback_reason}")
                 
                 # Preparar mensajes con system prompt
                 messages = [SystemMessage(content=agent_config["system_prompt"])]
@@ -450,15 +624,14 @@ Usa la información anterior para responder de manera precisa y fundamentada."""
                 # Verificar si necesitamos resumir la conversación
                 estimated_tokens = count_tokens_approximate(messages)
                 
-                # Límites por modelo (contexto seguro: 80% del máximo)
-                model_limits = {
-                    "google/gemini-2.5-flash-lite": 800_000,  # 1M tokens, usar 80%
-                    "openai/gpt-4.1-nano": 100_000,           # 128K tokens, usar ~80K
-                    "x-ai/grok-4.1-fast": 100_000,            # 128K tokens, usar ~80K
-                    "qwen/qwen3-coder": 25_000                # 32K tokens, usar ~25K
-                }
-                
-                safe_limit = model_limits.get(selected_model, 25_000)
+                # Obtener límite de contexto del modelo actual
+                current_model_config = model_manager.get_model(final_model_id)
+                if current_model_config:
+                    # Usar 80% del contexto para seguridad
+                    safe_limit = int(current_model_config.context_window * 0.8)
+                else:
+                    # Fallback conservador
+                    safe_limit = 25_000
                 
                 # Si excedemos el límite, resumir conversación
                 if estimated_tokens > safe_limit:
@@ -491,7 +664,7 @@ Usa la información anterior para responder de manera precisa y fundamentada."""
                         conversation_id=st.session_state.conversation_id,
                         title=title,
                         agent_name=selected_agent,
-                        model_name=selected_model
+                        model_name=final_model_id
                     )
                     st.session_state.is_new_conversation = False
                 

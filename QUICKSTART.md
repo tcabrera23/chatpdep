@@ -1,320 +1,251 @@
-# ⚡ Quick Start - ChatPdeP
+# 🚀 Quick Start - ChatPdeP v2.0
 
-Guía rápida para levantar ChatPdeP en 5 minutos.
+Guía rápida para empezar a usar ChatPdeP en 5 minutos.
 
-## 🚀 Opción 1: Docker (La Más Rápida)
+---
+
+## ⚡ Instalación Rápida (Docker)
 
 ### Requisitos
-- Docker y Docker Compose instalados
-- API keys (ver abajo)
+- Docker Desktop instalado
 
-### Pasos
+### 3 Comandos para Empezar
 
-1. **Clonar repositorio**
 ```bash
-git clone <tu-repositorio>
-cd agents_pdep
-```
+# 1. Clonar y entrar
+git clone <tu-repo> && cd agents_pdep
 
-2. **Crear archivo .env**
-```bash
-# Linux/Mac
+# 2. Configurar (crear .env con tus keys)
 cp .env.example .env
+# Editar .env con tus credenciales
 
-# Windows
-copy .env.example .env
-```
-
-3. **Editar .env con tus API keys**
-```env
-OPENROUTER_API_KEY=sk-or-v1-xxxxxxxxxxxxx
-OPENAI_API_KEY=sk-xxxxxxxxxxxxx
-SUPABASE_URL=https://xxxxx.supabase.co
-SUPABASE_SERVICE_KEY=eyJxxxxxxxxxxxxx
-```
-
-4. **Levantar aplicación**
-```bash
+# 3. Levantar
 docker-compose up --build
 ```
 
-5. **Abrir en navegador**
-```
-http://localhost:8501
-```
-
-✅ **¡Listo!** Ya puedes usar ChatPdeP.
+**¡Listo!** Abre `http://localhost:8501`
 
 ---
 
-## 🖥️ Opción 2: Local Sin Docker
+## 🎯 Primeros Pasos
 
-### Requisitos
-- Python 3.11 o superior
-- pip instalado
-- API keys (ver abajo)
+### 1. Elegir Modo
 
-### Pasos
+En el **sidebar**, selecciona:
 
-**Linux/Mac:**
-```bash
-# 1. Clonar repo
-git clone <tu-repositorio>
-cd agents_pdep
+**Opción A: Local (Gratis)**
+- Proveedor: `💻 Local (Ollama)`
+- Modelo: `Phi 4 Mini (3.8B)`
+- ✅ $0 en costos
 
-# 2. Ejecutar script
-chmod +x run_local.sh
-./run_local.sh
-```
+**Opción B: Cloud (Potente)**
+- Proveedor: `☁️ Cloud (OpenRouter)`
+- Configura tu API Key
+- Activa: `🎯 Auto-clasificar`
+- ✅ Optimiza costos automáticamente
 
-**Windows:**
-```cmd
-REM 1. Clonar repo
-git clone <tu-repositorio>
-cd agents_pdep
+### 2. Elegir Tutor
 
-REM 2. Ejecutar script
-run_local.bat
-```
+Selecciona según lo que necesites:
+- **Wollok**: Programación Orientada a Objetos
+- **Haskell**: Programación Funcional
+- **Prolog**: Programación Lógica
 
-El script automáticamente:
-- Crea entorno virtual
-- Instala dependencias
-- Ejecuta Streamlit
-
----
-
-## 🔑 Obtener API Keys (5 minutos)
-
-### 1. OpenRouter (GRATIS con créditos)
-
-1. Ve a [openrouter.ai](https://openrouter.ai)
-2. Registrate/Login
-3. Ve a [openrouter.ai/keys](https://openrouter.ai/keys)
-4. Crea key → Copia (empieza con `sk-or-v1-`)
-
-💰 **$5 de crédito gratis** al registrarte
-
-### 2. OpenAI (Para embeddings)
-
-1. Ve a [platform.openai.com](https://platform.openai.com)
-2. Registrate/Login
-3. Ve a [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-4. Crea key → Copia (empieza con `sk-`)
-
-💵 Agrega $5-10 a tu cuenta (embeddings son muy baratos)
-
-### 3. Supabase
-
-**Opción A:** Usar base de datos existente del proyecto
-- Solicita credenciales al admin
-
-**Opción B:** Crear tu propia base de datos
-- Ve a [supabase.com](https://supabase.com)
-- Crea proyecto gratis
-- Settings → API → Copia URL y service_role key
-- ⚠️ Necesitarás configurar las tablas (ver SETUP.md)
-
----
-
-## 🎮 Uso Básico
-
-### 1. Seleccionar Tutor
-
-En el sidebar, elige:
-- **Wollok** (Programación Orientada a Objetos)
-- **Haskell** (Programación Funcional)
-- **Prolog** (Programación Lógica)
-
-### 2. Seleccionar Modelo
-
-Recomendados:
-- `gemini-2.0-flash-exp:free` (gratis, rápido)
-- `gpt-4o-mini` (muy bueno, económico)
-- `grok-2-1212` (potente, más caro)
-
-### 3. Hacer una Pregunta
+### 3. Hacer tu Primera Pregunta
 
 Ejemplos:
 
-**Wollok:**
+**Pregunta Teórica:**
 ```
-¿Cómo implemento herencia en Wollok?
+¿Qué es polimorfismo en Wollok?
 ```
+→ Usa Gemini Flash Lite (económico)
 
-**Haskell:**
+**Desarrollo de Código:**
 ```
-¿Qué son las funciones de orden superior?
+Crea una clase Personaje en Wollok con nombre y energía
 ```
+→ Usa Grok o Codex (balanceado)
 
-**Prolog:**
+**Debugging Complejo:**
 ```
-Explícame la unificación con ejemplos
+Tengo este error [pega código], ¿cómo lo soluciono?
 ```
-
-### 4. Adjuntar Archivos (Opcional)
-
-- Click en "📎 Adjuntar archivo"
-- Soporta: PDFs e Imágenes
-- El agente analizará el contenido
+→ Usa Claude Opus (premium)
 
 ---
 
-## 💡 Tips
+## 💡 Características Principales
 
-### Mejores Prácticas
+### 🎯 Auto-Clasificación (Optimizar Costos)
 
-✅ **Sé específico en tus preguntas**
-```
-❌ "ayuda con objetos"
-✅ "¿Cómo defino atributos privados en una clase Wollok?"
-```
+1. Activa en sidebar: `🎯 Auto-clasificar`
+2. Haz tu pregunta
+3. El sistema elige el mejor modelo
+4. **Ahorro:** 60-80% en costos
 
-✅ **Usa el contexto**
-```
-"En el código que te pasé en el PDF, ¿cómo puedo mejorar el método calcular()?"
-```
+### 📎 Adjuntar Archivos
 
-✅ **Pide código completo**
-```
-"Dame el código completo de una clase Punto con x e y"
+Puedes adjuntar:
+- **PDFs**: Enunciados, teoría
+- **Imágenes**: Diagramas, código
+
+Ejemplo:
+1. Haz clic en "📎 Adjuntar archivo"
+2. Sube tu PDF con el ejercicio
+3. Pregunta: "Resuelve el ejercicio del PDF"
+
+### 📚 Historial
+
+En el **sidebar**, sección "Historial":
+- Ver conversaciones previas
+- Cargar conversación
+- Eliminar conversación
+
+---
+
+## 🔧 Configuración Avanzada
+
+### Agregar Modelo Personalizado
+
+1. Ve a [OpenRouter Models](https://openrouter.ai/models)
+2. Busca el modelo que quieres
+3. Copia su ID (ej: `openai/gpt-4o`)
+4. En sidebar → "➕ Agregar modelo personalizado"
+5. Pega el ID
+6. Configura tier y nombre
+7. ¡Listo!
+
+### Instalar Más Modelos Locales
+
+```bash
+# Modelos recomendados
+docker exec -it chatpdep_ollama ollama pull qwen3-4b
+docker exec -it chatpdep_ollama ollama pull deepseek-coder-6.7b
+
+# Ver instalados
+docker exec -it chatpdep_ollama ollama list
 ```
 
 ### Ajustar Ventana de Contexto
 
-- **4-6 mensajes**: Respuestas rápidas, menor contexto
-- **8-12 mensajes**: Balanceado (recomendado)
-- **14-20 mensajes**: Conversaciones largas, más contexto
-
-### Cambiar de Agente
-
-Si cambias de Wollok a Haskell:
-- Se creará una nueva conversación automáticamente
-- El historial anterior se guarda
+En sidebar:
+- Slider: "Ventana de contexto"
+- Rango: 4-20 mensajes
+- Recomendado: 8 mensajes
 
 ---
 
-## 🐛 Problemas Comunes
+## 🆘 Solución Rápida de Problemas
 
-### "Invalid API Key"
-- Verifica que copiaste la key completa
-- Asegúrate de tener fondos (OpenAI)
-
-### "Connection to Supabase failed"
-- Verifica URL y key en `.env`
-- Asegúrate de tener internet
-
-### "Module not found"
+### Ollama no responde
 ```bash
-pip install -r requirements.txt --force-reinstall
+docker logs chatpdep_ollama
+docker-compose restart ollama
 ```
 
-### La app no se ve bien
+### API Key inválida
+1. Verifica en `.env`
+2. Verifica créditos en OpenRouter
+3. Reconfigura en sidebar
+
+### Puerto ocupado
 ```bash
-streamlit cache clear
-streamlit run app.py
-```
-
----
-
-## 📚 Más Información
-
-- **Guía completa**: Ver `SETUP.md`
-- **Documentación**: Ver `README.md`
-- **Estructura**: Ver `PROJECT_STRUCTURE.md`
-- **Migración N8N**: Ver `MIGRATION_FROM_N8N.md`
-
----
-
-## 🎓 Primeros Pasos Recomendados
-
-### 1. Prueba Básica
-```
-Usuario: "¿Qué es Wollok?"
-```
-Verifica que el agente responde correctamente.
-
-### 2. Prueba con RAG
-```
-Usuario: "Dame ejemplos de clases en Wollok"
-```
-El agente debería usar `recuperar_teoria` para buscar info.
-
-### 3. Prueba con Archivo
-- Adjunta un PDF con código
-- Pregunta sobre ese código
-
-### 4. Prueba Historial
-- Haz varias preguntas
-- Click en "➕ Nueva Conversación"
-- Verifica que puedes volver a la anterior
-
----
-
-## ⚙️ Configuración Avanzada
-
-### Cambiar Puerto
-
-**Docker:**
-```yaml
-# docker-compose.yml
+# Cambiar puerto en docker-compose.yml
 ports:
-  - "8502:8501"  # Usar puerto 8502
-```
-
-**Local:**
-```bash
-streamlit run app.py --server.port 8502
-```
-
-### Cambiar Ubicación de DB
-
-```bash
-# .env
-DB_PATH=custom/path/conversations.db
-```
-
-### Variables de Entorno Adicionales
-
-```env
-# .env
-STREAMLIT_SERVER_PORT=8501
-STREAMLIT_SERVER_ADDRESS=0.0.0.0
-STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+  - "8502:8501"
 ```
 
 ---
 
-## 🚀 Deploy en Cloud
+## 📖 Documentación Completa
 
-### Streamlit Cloud (GRATIS)
-
-1. Push código a GitHub
-2. Ve a [streamlit.io/cloud](https://streamlit.io/cloud)
-3. Connect repositorio
-4. Agregar secrets:
-   ```
-   OPENROUTER_API_KEY = "sk-or-..."
-   OPENAI_API_KEY = "sk-..."
-   SUPABASE_URL = "https://..."
-   SUPABASE_SERVICE_KEY = "eyJ..."
-   ```
-5. Deploy!
-
-⚠️ **Nota**: El historial no se persistirá en Streamlit Cloud (SQLite en memoria)
+- **NEW_VERSION.md**: Todas las nuevas características
+- **INSTALLATION_GUIDE.md**: Guía detallada de instalación
+- **README.md**: Documentación técnica completa
+- **CHANGELOG.md**: Historial de cambios
 
 ---
 
-## 🎉 ¡Listo!
+## 💬 Ejemplos de Uso
 
-Ya estás usando ChatPdeP. Algunas ideas:
+### Ejemplo 1: Pregunta Teórica Simple
+```
+Usuario: ¿Qué es un objeto en Wollok?
+Sistema: 🎯 Clasificada como teórica simple
+Modelo: Gemini 2.5 Flash Lite
+Respuesta: [Explicación clara y concisa]
+```
 
-- 📝 Resuelve ejercicios de la facultad
-- 🧪 Experimenta con diferentes paradigmas
-- 📚 Aprende nuevos conceptos
-- 💬 Pregunta sobre errores en tu código
+### Ejemplo 2: Ejercicio de Código
+```
+Usuario: Implementa la clase Guerrero con ataque y defensa
+Sistema: 🎯 Clasificada como código media
+Modelo: Grok 4.1 Fast
+Respuesta: [Código completo en Wollok con explicación]
+```
 
-**¿Problemas?** Revisa `SETUP.md` o abre un issue.
+### Ejemplo 3: Debugging Complejo
+```
+Usuario: [Adjunta imagen con error] ¿Por qué falla este código?
+Sistema: 🎯 Clasificada como debugging complejo
+Modelo: Claude Opus 4.6
+Respuesta: [Análisis detallado del error y solución]
+```
 
-**¡Feliz aprendizaje! 🎓**
+---
 
+## 🎓 Tips y Trucos
+
+### Optimizar Costos
+- ✅ Activa auto-clasificación
+- ✅ Usa Ollama local para preguntas simples
+- ✅ Reserva Claude Opus para problemas complejos
+
+### Mejores Respuestas
+- ✅ Sé específico en tus preguntas
+- ✅ Adjunta archivos cuando sea relevante
+- ✅ Usa el tutor correcto (Wollok/Haskell/Prolog)
+- ✅ Proporciona contexto si es necesario
+
+### Gestión de Conversaciones
+- ✅ Crea nueva conversación para temas diferentes
+- ✅ Revisa el historial antes de preguntar lo mismo
+- ✅ Borra conversaciones antiguas para orden
+
+---
+
+## ⚙️ Configuración Recomendada
+
+### Para Estudiantes
+```
+Proveedor: Local (Ollama)
+Modelo: phi4-mini
+Auto-clasificar: Desactivado
+Ventana: 8 mensajes
+```
+**Por qué:** Gratis, suficiente para aprender
+
+### Para Desarrollo Serio
+```
+Proveedor: Cloud (OpenRouter)
+Auto-clasificar: Activado
+Ventana: 12 mensajes
+API Key: Configurada
+```
+**Por qué:** Mejor calidad, optimiza costos
+
+### Para Exámenes/Parciales
+```
+Proveedor: Cloud
+Modelo manual: Claude Opus
+Auto-clasificar: Desactivado
+Ventana: 16 mensajes
+```
+**Por qué:** Máxima calidad, sin riesgo de fallos
+
+---
+
+**¡Listo para empezar!** 🎉
+
+Si tienes problemas, consulta la [Guía de Instalación](INSTALLATION_GUIDE.md).
