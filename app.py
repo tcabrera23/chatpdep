@@ -335,7 +335,7 @@ with st.sidebar:
         
         # Placeholder según proveedor
         placeholder_map = {
-            "groq": "llama-3.3-70b-versatile",
+            "groq": "groq/compound",
             "openrouter": "openai/gpt-4o",
             "ollama": "llama3"
         }

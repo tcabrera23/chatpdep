@@ -263,7 +263,7 @@ Los system prompts de cada agente están en `config/agents.py`. Puedes editarlos
 
 - **Frontend**: [Streamlit](https://streamlit.io/)
 - **LLM Framework**: [LangChain](https://python.langchain.com/)
-- **Modelos Gratis**: [Groq](https://groq.com/) (Llama 3.3, Mixtral - **Gratis**)
+- **Modelos Gratis**: [Groq](https://groq.com/) (Groq Compound - sistema agentico con **búsqueda web** y **ejecución de código** - **Gratis**)
 - **Modelos Cloud**: [OpenRouter](https://openrouter.ai/) (Gemini, GPT-5, Grok, Claude)
 - **Modelos Locales**: [Ollama](https://ollama.ai/) (Phi, Qwen, DeepSeek)
 - **Embeddings**: OpenAI `text-embedding-3-small`
@@ -371,7 +371,7 @@ Ver [TESTING.md](TESTING.md) para documentación completa.
 
 1. **Encuentra tu modelo** en [OpenRouter](https://openrouter.ai/models) o [Groq Console](https://console.groq.com/keys)
 
-2. **Copia el ID** (ej: `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`, `llama-3.3-70b-versatile`)
+2. **Copia el ID** (ej: `openai/gpt-4o`, `anthropic/claude-3.5-sonnet`, `groq/compound`)
 
 3. **En el sidebar**, abre "➕ Agregar modelo personalizado"
 

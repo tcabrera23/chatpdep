@@ -109,46 +109,18 @@ class ModelManager:
     }
     
     # Modelos de Groq (API Gratuita)
+    # groq/compound: sistema agentico con búsqueda web y ejecución de código
+    # https://console.groq.com/docs/models
     GROQ_MODELS = [
         ModelConfig(
-            id="llama-3.3-70b-versatile",
-            name="Llama 3.3 70B Versatile",
+            id="groq/compound",
+            name="Groq Compound",
             provider="groq",
             tier="balanced",
             input_cost="$0 (Gratis)",
             output_cost="$0 (Gratis)",
-            description="Gratis - Excelente para propósito general",
-            context_window=128_000,
-        ),
-        ModelConfig(
-            id="llama-3.1-70b-versatile",
-            name="Llama 3.1 70B Versatile",
-            provider="groq",
-            tier="balanced",
-            input_cost="$0 (Gratis)",
-            output_cost="$0 (Gratis)",
-            description="Gratis - Muy rápido y potente",
-            context_window=128_000,
-        ),
-        ModelConfig(
-            id="mixtral-8x7b-32768",
-            name="Mixtral 8x7B",
-            provider="groq",
-            tier="balanced",
-            input_cost="$0 (Gratis)",
-            output_cost="$0 (Gratis)",
-            description="Gratis - Excelente para código",
-            context_window=32_768,
-        ),
-        ModelConfig(
-            id="gemma2-9b-it",
-            name="Gemma 2 9B",
-            provider="groq",
-            tier="economy",
-            input_cost="$0 (Gratis)",
-            output_cost="$0 (Gratis)",
-            description="Gratis - Rápido y eficiente",
-            context_window=8_192,
+            description="Sistema agentico con herramientas integradas (web search, code execution)",
+            context_window=131_072,
         ),
     ]
     
@@ -317,9 +289,10 @@ class ModelManager:
     
     def get_fallback_model(self) -> ModelConfig:
         """
-        Obtiene el modelo de fallback por defecto (Gemini Flash Lite).
+        Obtiene el modelo de fallback por defecto (Groq Llama 3.3 Versatile).
         """
-        return self.PREDEFINED_MODELS["google/gemini-2.5-flash-lite"]
+        # Usamos Llama 3.3 Versatile de Groq como fallback por ser gratuito y robusto
+        return self.GROQ_MODELS[0]
     
     def create_llm(
         self,
