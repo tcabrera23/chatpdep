@@ -5,7 +5,6 @@ Aplicación web interactiva que proporciona tutorías personalizadas para la mat
 ## 🆕 Versión 2.0 - Nuevas Características
 
 - **⚡ Groq API gratuita** - Usa Llama 3.3 70B gratis (ideal para empezar)
-- **☁️ Streamlit Cloud ready** - Publica tu app y compártela con el mundo
 - **💻 Soporte para modelos locales** con Ollama (ejecución sin costo)
 - **🎯 Clasificación automática** de consultas para optimizar costos
 - **➕ Modelos personalizados** desde OpenRouter/Groq
@@ -13,7 +12,6 @@ Aplicación web interactiva que proporciona tutorías personalizadas para la mat
 - **📝 Summarización mejorada** con detección automática de límites
 
 > 📖 **[Ver NEW_VERSION.md](NEW_VERSION.md)** para detalles completos de la versión 2.0
-> 🚀 **[Ver STREAMLIT_CLOUD_DEPLOY.md](STREAMLIT_CLOUD_DEPLOY.md)** para publicar en cloud
 
 ## 🌟 Características
 
@@ -38,14 +36,8 @@ Cada agente utiliza RAG para recuperar información específica de su base de co
 
 - **⚡ Groq API Gratuita**: 
   - Llama 3.3 70B gratis (70B parámetros)
-  - Mixtral 8x7B gratis
   - Sin costo, ideal para estudiantes
   - Velocidad ultrarrápida
-- **☁️ Streamlit Cloud Ready**:
-  - Publica tu app en minutos
-  - Comparte con link público
-  - Sesiones por navegador (no requiere login)
-  - **[Ver guía de deploy](STREAMLIT_CLOUD_DEPLOY.md)**
 - **💻 Modelos Locales con Ollama**: Ejecuta LLMs en tu máquina sin costo
   - `phi4-mini` (3.8B) y `qwen3:4b` (4B) instalados por defecto
   - Soporte para `deepseek-coder:6.7b`, `qwen2.5-coder:7b`
@@ -184,28 +176,6 @@ cp .env.example .env
 ```bash
 streamlit run app.py
 ```
-
-### Opción 3: Deploy en Streamlit Cloud ☁️
-
-Publica ChatPdeP y compártelo con el mundo:
-
-1. **Repositorio público en GitHub**
-2. **Crear cuenta en [Streamlit Cloud](https://share.streamlit.io)** (gratis)
-3. **Deploy en 3 clics**:
-   - New app → Selecciona tu repo → Deploy
-4. **Configurar Secrets**:
-   - Settings → Secrets → Pegar configuración de `.streamlit/secrets.toml.example`
-
-**📖 Guía completa:** [STREAMLIT_CLOUD_DEPLOY.md](STREAMLIT_CLOUD_DEPLOY.md)
-
-**Funcionalidades en Cloud:**
-- ✅ Groq gratis (Llama 3.3 70B)
-- ✅ OpenRouter (modelos premium)
-- ✅ Auto-clasificación
-- ✅ RAG con Supabase
-- ⚠️ Sin persistencia de conversaciones (solo durante sesión)
-- ❌ Ollama no disponible (solo local)
-
 ## 🗄️ Configuración de Supabase
 
 ### Base de Datos Vectorial
@@ -381,11 +351,11 @@ Ver [TESTING.md](TESTING.md) para documentación completa.
 
 3. **El sistema analiza**:
    - "¿Qué es polimorfismo?" → Groq Llama 3.3 70B (Gratis)
-   - "Resuelve este ejercicio de Wollok" → Groq Mixtral 8x7B (Gratis)
-   - "Debug este error complejo" → Claude Opus ($5/$25)
+   - "Resuelve este ejercicio de Wollok" → GPT Codex Mini 
+   - "Debug este error complejo" → Claude Opus
 
 4. **Resultados**:
-   - Ahorro promedio: 60-80% en costos (¡o 100% con Groq!)
+   - Ahorro promedio: 60-80% en costos (¡o 100% con Groq! Consultar limite de tokens en el portal de Groq)
    - Calidad apropiada para cada tipo de consulta
 
 **Ejemplo de ahorro:**
