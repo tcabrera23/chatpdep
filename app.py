@@ -202,9 +202,12 @@ with st.sidebar:
     }
     
     # Determinar índice actual
+    # Si el proveedor guardado en sesión no es 'groq', lo seteamos a 0 para que 'groq' sea el default.
+    # Esto asegura que Groq sea el proveedor por defecto al iniciar o refrescar.
     current_index = 0
-    if st.session_state.model_provider in provider_options:
-        current_index = provider_options.index(st.session_state.model_provider)
+    if st.session_state.model_provider != "groq":
+        st.session_state.model_provider = "groq" # Forzar Groq como default si no fue seteado o es inválido
+        current_index = 0 # Asegurar que Groq sea el seleccionado por defecto en el radio button
     
     provider = st.radio(
         "Selecciona el proveedor",
@@ -220,7 +223,7 @@ with st.sidebar:
         # API Key de Groq (gratis)
         groq_key = st.text_input(
             "Groq API Key (Gratis)",
-            value=os.getenv("GROQ_API_KEY", ""),
+            value="", # No mostrar el valor por defecto
             type="password",
             help="Obtén tu API key gratis en https://console.groq.com/keys"
         )
@@ -234,7 +237,7 @@ with st.sidebar:
         # API Key de OpenRouter (pago)
         openrouter_key = st.text_input(
             "OpenRouter API Key",
-            value=os.getenv("OPENROUTER_API_KEY", ""),
+            value="", # No mostrar el valor por defecto
             type="password",
             help="Tu API key de OpenRouter para usar los modelos"
         )
